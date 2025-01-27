@@ -5,6 +5,7 @@ const {
   getArticleById,
   getArticles,
 } = require("./controllers/articles.controller");
+const { getCommentsByArticleId } = require("./controllers/comments.controller");
 
 const app = express();
 
@@ -18,9 +19,11 @@ app.get("/api/articles/:article_id", getArticleById);
 
 app.get("/api/articles", getArticles);
 
+app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
+
 // Catch-all for undefined routes
-app.all("*", (req, res, next) => {
-  next({ status: 404, msg: "Route not found" });
+app.all("*", (req, res) => {
+  res.status(404).send({ msg: "Route not found" });
 });
 
 // Custom error handler for 400s
@@ -36,7 +39,10 @@ app.use((err, req, res, next) => {
 
 // Custom error handler for 404s
 app.use((err, req, res, next) => {
-  if (err.msg === "Article not found") {
+  if (
+    err.msg === "Article not found" ||
+    err.msg === "Comments not found for this article"
+  ) {
     res.status(404).send({ error: "Not found" });
   } else {
     next(err);
