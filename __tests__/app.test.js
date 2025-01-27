@@ -23,3 +23,39 @@ describe("GET /api", () => {
       });
   });
 });
+
+describe("GET /api/topics", () => {
+  test("200: Responds with an array of all the topics", () => {
+    return request(app)
+      .get("/api/topics")
+      .expect(200)
+      .then(({ body: { topics } }) => {
+        expect(topics.length).toBe(3);
+
+        topics.forEach((topic) => {
+          expect(topic).toMatchObject({
+            description: expect.any(String),
+            slug: expect.any(String),
+          });
+        });
+      });
+  });
+
+  test("Responds with 404 when trying to access an invalid endpoint", () => {
+    return request(app)
+      .get("/api/topix")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Route not found");
+      });
+  });
+
+  test("Responds with 404 for unsupported HTTP methods on existing routes", () => {
+    return request(app)
+      .post("/api/topics")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Route not found");
+      });
+  });
+});
