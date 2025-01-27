@@ -5,7 +5,10 @@ const {
   getArticleById,
   getArticles,
 } = require("./controllers/articles.controller");
-const { getCommentsByArticleId } = require("./controllers/comments.controller");
+const {
+  getCommentsByArticleId,
+  postComment,
+} = require("./controllers/comments.controller");
 
 const app = express();
 
@@ -21,6 +24,8 @@ app.get("/api/articles", getArticles);
 
 app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
+app.post("/api/articles/:article_id/comments", postComment);
+
 // Catch-all for undefined routes
 app.all("*", (req, res) => {
   res.status(404).send({ msg: "Route not found" });
@@ -30,7 +35,11 @@ app.all("*", (req, res) => {
 app.use((err, req, res, next) => {
   console.log(err);
 
-  if (err.code === "22P02") {
+  if (
+    err.code === "22P02" ||
+    err.code === "23502" ||
+    err.msg === "Incorrect data type"
+  ) {
     res.status(400).send({ error: "Bad request" });
   } else {
     next(err);

@@ -201,3 +201,59 @@ describe("GET /api/articles/:article_id/comments", () => {
       });
   });
 });
+
+describe("POST /api/articles/:article_id/comments", () => {
+  test("201: should respond with the posted comment", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge", body: "wow so cool" })
+      .expect(201)
+      .then((response) => {
+        expect(response.body.comment.author).toBe("butter_bridge");
+        expect(response.body.comment.body).toBe("wow so cool");
+        expect(response.body.comment.votes).toBe(0);
+        expect(response.body.comment.article_id).toBe(1);
+        expect(typeof response.body.comment.created_at).toBe("string");
+      });
+  });
+
+  test("should return 400 when given missing keys/malformed input", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("Bad request");
+      });
+  });
+
+  test("should return 400 when input has an incorrect data type", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: 5, body: "wow so cool" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("Bad request");
+      });
+  });
+
+  test("should return 404 when given an article id which is out of range / invalid", () => {
+    return request(app)
+      .post("/api/articles/999/comments")
+      .send({ username: "butter_bridge", body: "wow so cool" })
+      .expect(404)
+      .then((response) => {
+        expect(response.body.error).toBe("Not found");
+      });
+  });
+
+  test("should return 400 when given an article id which is not a number", () => {
+    return request(app)
+      .post("/api/articles/whoops/comments")
+      .send({ username: "butter_bridge", body: "wow so cool" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("Bad request");
+      });
+  });
+});
