@@ -4,7 +4,7 @@ const app = require("../app");
 const seed = require("../db/seeds/seed");
 const db = require("../db/connection");
 const testData = require("../db/data/test-data/index");
-const articles = require("../db/data/test-data/articles");
+const { toBeSorted, toBeSortedBy } = require("jest-sorted");
 
 beforeEach(() => {
   return seed(testData);
@@ -97,6 +97,49 @@ describe("GET /api/articles/:article_id", () => {
       .expect(400)
       .then((response) => {
         expect(response.body.error).toBe("Bad request");
+      });
+  });
+});
+
+describe("GET /api/articles", () => {
+  test("200: should return an array of article objects with the correct properties", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles.length).toBe(13);
+
+        articles.forEach((article) => {
+          expect(article).toMatchObject({
+            author: expect.any(String),
+            title: expect.any(String),
+            article_id: expect.any(Number),
+            topic: expect.any(String),
+            created_at: expect.any(String),
+            votes: expect.any(Number),
+            article_img_url: expect.any(String),
+            comment_count: expect.any(Number),
+          });
+        });
+      });
+  });
+
+  test("200: should have a comment count property which counts the comments for the corresponding article", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        articles.filter((article) => article.article_id === 5);
+        expect(articles[0].comment_count).toBe(2);
+      });
+  });
+
+  test("200: should order the articles by date in descending order", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toBeSorted({ key: "created_at", descending: true });
       });
   });
 });
