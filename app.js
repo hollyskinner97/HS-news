@@ -1,7 +1,10 @@
 const express = require("express");
 const { getApiEndpoints } = require("./controllers/endpoints.controller");
 const { getTopics } = require("./controllers/topics.controller");
-const { getArticleById } = require("./controllers/articles.controller");
+const {
+  getArticleById,
+  getArticles,
+} = require("./controllers/articles.controller");
 
 const app = express();
 
@@ -13,6 +16,8 @@ app.get("/api/topics", getTopics);
 
 app.get("/api/articles/:article_id", getArticleById);
 
+app.get("/api/articles", getArticles);
+
 // Catch-all for undefined routes
 app.all("*", (req, res, next) => {
   next({ status: 404, msg: "Route not found" });
@@ -20,6 +25,8 @@ app.all("*", (req, res, next) => {
 
 // Custom error handler for 400s
 app.use((err, req, res, next) => {
+  console.log(err);
+
   if (err.code === "22P02") {
     res.status(400).send({ error: "Bad request" });
   } else {
