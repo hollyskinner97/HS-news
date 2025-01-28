@@ -320,3 +320,32 @@ describe("PATCH /api/articles/:article_id", () => {
       });
   });
 });
+
+describe("DELETE /api/comments/:comment_id", () => {
+  test("204: Should respond with a 204 and no content", () => {
+    return request(app)
+      .delete("/api/comments/1")
+      .expect(204)
+      .then((response) => {
+        expect(response.body).toEqual({});
+      });
+  });
+
+  test("should return 404 if the comment id is out of range", () => {
+    return request(app)
+      .delete("/api/comments/1000")
+      .expect(404)
+      .then((response) => {
+        expect(response.body.error).toBe("Comment not found");
+      });
+  });
+
+  test("should return 400 if the comment id is invalid / not a number", () => {
+    return request(app)
+      .delete("/api/comments/whoops")
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("Bad request");
+      });
+  });
+});
