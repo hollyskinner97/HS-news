@@ -37,7 +37,7 @@ app.get("/api/users", getUsers);
 
 // Catch-all for undefined routes
 app.all("*", (req, res) => {
-  res.status(404).send({ msg: "Route not found" });
+  res.status(404).send({ error: "Route not found" });
 });
 
 // Custom error handler

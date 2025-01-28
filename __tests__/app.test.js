@@ -5,6 +5,7 @@ const seed = require("../db/seeds/seed");
 const db = require("../db/connection");
 const testData = require("../db/data/test-data/index");
 const { toBeSorted, toBeSortedBy } = require("jest-sorted");
+const articles = require("../db/data/test-data/articles");
 
 beforeEach(() => {
   return seed(testData);
@@ -19,8 +20,8 @@ describe("Invalid endpoint error", () => {
     return request(app)
       .get("/api/topix")
       .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Route not found");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Route not found");
       });
   });
 });
@@ -59,8 +60,8 @@ describe("GET /api/articles/:article_id", () => {
     return request(app)
       .get("/api/articles/1")
       .expect(200)
-      .then(({ body }) => {
-        expect(body.article).toEqual({
+      .then(({ body: { article } }) => {
+        expect(article).toEqual({
           article_id: 1,
           title: "Living in the shadow of a great man",
           topic: "mitch",
@@ -78,8 +79,8 @@ describe("GET /api/articles/:article_id", () => {
     return request(app)
       .get("/api/articles/999")
       .expect(404)
-      .then((response) => {
-        expect(response.body.error).toBe("Article not found");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Article not found");
       });
   });
 
@@ -87,8 +88,8 @@ describe("GET /api/articles/:article_id", () => {
     return request(app)
       .get("/api/articles/whoops")
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 });
@@ -125,13 +126,69 @@ describe("GET /api/articles", () => {
       });
   });
 
-  test("200: should order the articles by date in descending order", () => {
+  test("200: should order the articles by date in descending order by default", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
       .then(({ body: { articles } }) => {
         expect(articles).toBeSorted({ key: "created_at", descending: true });
       });
+  });
+
+  describe("Queries: sort_by and order", () => {
+    test("200: should be able to sort by any valid column e.g. title", () => {
+      return request(app)
+        .get("/api/articles?sort_by=title")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSorted({ key: "title", descending: true });
+        });
+    });
+
+    test("should return 400 when given a column that is not allowed", () => {
+      return request(app)
+        .get("/api/articles?sort_by=body")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Invalid sort_by column");
+        });
+    });
+
+    test("should return 400 when given a column that does not exist", () => {
+      return request(app)
+        .get("/api/articles?sort_by=whoops")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Invalid sort_by column");
+        });
+    });
+
+    test("200: should return the results in ascending order, overwriting the default descending order", () => {
+      return request(app)
+        .get("/api/articles?order=asc")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSorted({ key: "created_at", ascending: true });
+        });
+    });
+
+    test("should return 400 when given an order that is invalid", () => {
+      return request(app)
+        .get("/api/articles?order=whoops")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Invalid order");
+        });
+    });
+
+    test("200: should be able to handle a sort_by and order query in tandem", () => {
+      return request(app)
+        .get("/api/articles?&sort_by=votes&order=asc")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSorted({ key: "votes", ascending: true });
+        });
+    });
   });
 });
 
@@ -170,6 +227,7 @@ describe("GET /api/articles/:article_id/comments", () => {
       .get("/api/articles/2/comments")
       .expect(200)
       .then(({ body: { comments } }) => {
+        expect(Array.isArray(comments)).toBe(true);
         expect(comments.length).toBe(0);
       });
   });
@@ -178,8 +236,8 @@ describe("GET /api/articles/:article_id/comments", () => {
     return request(app)
       .get("/api/articles/999/comments")
       .expect(404)
-      .then((response) => {
-        expect(response.body.error).toBe("Article not found");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Article not found");
       });
   });
 
@@ -187,8 +245,8 @@ describe("GET /api/articles/:article_id/comments", () => {
     return request(app)
       .get("/api/articles/whoops/comments")
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 });
@@ -199,12 +257,12 @@ describe("POST /api/articles/:article_id/comments", () => {
       .post("/api/articles/1/comments")
       .send({ username: "butter_bridge", body: "wow so cool" })
       .expect(201)
-      .then((response) => {
-        expect(response.body.comment.author).toBe("butter_bridge");
-        expect(response.body.comment.body).toBe("wow so cool");
-        expect(response.body.comment.votes).toBe(0);
-        expect(response.body.comment.article_id).toBe(1);
-        expect(typeof response.body.comment.created_at).toBe("string");
+      .then(({ body: { comment } }) => {
+        expect(comment.author).toBe("butter_bridge");
+        expect(comment.body).toBe("wow so cool");
+        expect(comment.votes).toBe(0);
+        expect(comment.article_id).toBe(1);
+        expect(typeof comment.created_at).toBe("string");
       });
   });
 
@@ -213,8 +271,8 @@ describe("POST /api/articles/:article_id/comments", () => {
       .post("/api/articles/1/comments")
       .send({ username: "butter_bridge" })
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 
@@ -223,8 +281,8 @@ describe("POST /api/articles/:article_id/comments", () => {
       .post("/api/articles/1/comments")
       .send({ username: 5, body: "wow so cool" })
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 
@@ -233,8 +291,8 @@ describe("POST /api/articles/:article_id/comments", () => {
       .post("/api/articles/999/comments")
       .send({ username: "butter_bridge", body: "wow so cool" })
       .expect(404)
-      .then((response) => {
-        expect(response.body.error).toBe("Article not found");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Article not found");
       });
   });
 
@@ -243,8 +301,8 @@ describe("POST /api/articles/:article_id/comments", () => {
       .post("/api/articles/whoops/comments")
       .send({ username: "butter_bridge", body: "wow so cool" })
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 });
@@ -255,8 +313,8 @@ describe("PATCH /api/articles/:article_id", () => {
       .patch("/api/articles/1")
       .send({ inc_votes: 1 })
       .expect(200)
-      .then((response) => {
-        expect(response.body.article).toEqual({
+      .then(({ body: { article } }) => {
+        expect(article).toEqual({
           article_id: 1,
           title: "Living in the shadow of a great man",
           topic: "mitch",
@@ -275,8 +333,8 @@ describe("PATCH /api/articles/:article_id", () => {
       .patch("/api/articles/1")
       .send({ inc_votes: -1 })
       .expect(200)
-      .then((response) => {
-        expect(response.body.article.votes).toBe(99);
+      .then(({ body: { article } }) => {
+        expect(article.votes).toBe(99);
       });
   });
 
@@ -285,8 +343,8 @@ describe("PATCH /api/articles/:article_id", () => {
       .patch("/api/articles/1")
       .send({})
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 
@@ -295,8 +353,8 @@ describe("PATCH /api/articles/:article_id", () => {
       .patch("/api/articles/1")
       .send({ inc_votes: "four" })
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 
@@ -305,8 +363,8 @@ describe("PATCH /api/articles/:article_id", () => {
       .patch("/api/articles/999")
       .send({ inc_votes: 4 })
       .expect(404)
-      .then((response) => {
-        expect(response.body.error).toBe("Article not found");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Article not found");
       });
   });
 
@@ -315,8 +373,8 @@ describe("PATCH /api/articles/:article_id", () => {
       .patch("/api/articles/whoops")
       .send({ inc_votes: 4 })
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 });
@@ -326,8 +384,8 @@ describe("DELETE /api/comments/:comment_id", () => {
     return request(app)
       .delete("/api/comments/1")
       .expect(204)
-      .then((response) => {
-        expect(response.body).toEqual({});
+      .then(({ body }) => {
+        expect(body).toEqual({});
       });
   });
 
@@ -335,8 +393,8 @@ describe("DELETE /api/comments/:comment_id", () => {
     return request(app)
       .delete("/api/comments/1000")
       .expect(404)
-      .then((response) => {
-        expect(response.body.error).toBe("Comment not found");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Comment not found");
       });
   });
 
@@ -344,8 +402,8 @@ describe("DELETE /api/comments/:comment_id", () => {
     return request(app)
       .delete("/api/comments/whoops")
       .expect(400)
-      .then((response) => {
-        expect(response.body.error).toBe("Bad request");
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
       });
   });
 });
