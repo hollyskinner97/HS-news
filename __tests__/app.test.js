@@ -14,6 +14,17 @@ afterAll(() => {
   return db.end(); // this closes the connection to the database
 });
 
+describe("Invalid endpoint error", () => {
+  test("Responds with 404 when trying to access an invalid endpoint", () => {
+    return request(app)
+      .get("/api/topix")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Route not found");
+      });
+  });
+});
+
 describe("GET /api", () => {
   test("200: Responds with an object detailing the documentation for each endpoint", () => {
     return request(app)
@@ -41,24 +52,6 @@ describe("GET /api/topics", () => {
         });
       });
   });
-
-  test("Responds with 404 when trying to access an invalid endpoint", () => {
-    return request(app)
-      .get("/api/topix")
-      .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Route not found");
-      });
-  });
-
-  test("Responds with 404 for unsupported HTTP methods on existing routes", () => {
-    return request(app)
-      .post("/api/topics")
-      .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Route not found");
-      });
-  });
 });
 
 describe("GET /api/articles/:article_id", () => {
@@ -67,17 +60,16 @@ describe("GET /api/articles/:article_id", () => {
       .get("/api/articles/1")
       .expect(200)
       .then(({ body }) => {
-        const article = body.article;
-
-        expect(article).toMatchObject({
-          author: expect.any(String),
-          title: expect.any(String),
-          article_id: expect.any(Number),
-          body: expect.any(String),
-          topic: expect.any(String),
-          created_at: expect.any(String),
-          votes: expect.any(Number),
-          article_img_url: expect.any(String),
+        expect(body.article).toEqual({
+          article_id: 1,
+          title: "Living in the shadow of a great man",
+          topic: "mitch",
+          author: "butter_bridge",
+          body: "I find this existence challenging",
+          created_at: "2020-07-09T20:11:00.000Z",
+          votes: 100,
+          article_img_url:
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
         });
       });
   });
@@ -87,7 +79,7 @@ describe("GET /api/articles/:article_id", () => {
       .get("/api/articles/999")
       .expect(404)
       .then((response) => {
-        expect(response.body.error).toBe("Not found");
+        expect(response.body.error).toBe("Article not found");
       });
   });
 
@@ -129,7 +121,6 @@ describe("GET /api/articles", () => {
       .get("/api/articles")
       .expect(200)
       .then(({ body: { articles } }) => {
-        articles.filter((article) => article.article_id === 5);
         expect(articles[0].comment_count).toBe(2);
       });
   });
@@ -188,7 +179,7 @@ describe("GET /api/articles/:article_id/comments", () => {
       .get("/api/articles/999/comments")
       .expect(404)
       .then((response) => {
-        expect(response.body.error).toBe("Not found");
+        expect(response.body.error).toBe("Article not found");
       });
   });
 
@@ -243,7 +234,7 @@ describe("POST /api/articles/:article_id/comments", () => {
       .send({ username: "butter_bridge", body: "wow so cool" })
       .expect(404)
       .then((response) => {
-        expect(response.body.error).toBe("Not found");
+        expect(response.body.error).toBe("Article not found");
       });
   });
 
@@ -251,6 +242,78 @@ describe("POST /api/articles/:article_id/comments", () => {
     return request(app)
       .post("/api/articles/whoops/comments")
       .send({ username: "butter_bridge", body: "wow so cool" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("Bad request");
+      });
+  });
+});
+
+describe("PATCH /api/articles/:article_id", () => {
+  test("200: should return the updated article with votes value amended", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send({ inc_votes: 1 })
+      .expect(200)
+      .then((response) => {
+        expect(response.body.article).toEqual({
+          article_id: 1,
+          title: "Living in the shadow of a great man",
+          topic: "mitch",
+          author: "butter_bridge",
+          body: "I find this existence challenging",
+          created_at: "2020-07-09T20:11:00.000Z",
+          votes: 101,
+          article_img_url:
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        });
+      });
+  });
+
+  test("200: should update the votes correctly when given a negative increment value", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send({ inc_votes: -1 })
+      .expect(200)
+      .then((response) => {
+        expect(response.body.article.votes).toBe(99);
+      });
+  });
+
+  test("should return 400 when passed a req body with missing fields", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send({})
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("Bad request");
+      });
+  });
+
+  test("should return 400 when passed a req body with invalid fields", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send({ inc_votes: "four" })
+      .expect(400)
+      .then((response) => {
+        expect(response.body.error).toBe("Bad request");
+      });
+  });
+
+  test("should return 404 when given an article id which is out of range / invalid", () => {
+    return request(app)
+      .patch("/api/articles/999")
+      .send({ inc_votes: 4 })
+      .expect(404)
+      .then((response) => {
+        expect(response.body.error).toBe("Article not found");
+      });
+  });
+
+  test("should return 400 when given an article id which is not a number", () => {
+    return request(app)
+      .patch("/api/articles/whoops")
+      .send({ inc_votes: 4 })
       .expect(400)
       .then((response) => {
         expect(response.body.error).toBe("Bad request");

@@ -12,7 +12,6 @@ exports.getCommentsByArticleId = (req, res, next) => {
     .catch(next);
 };
 
-// Complete this!
 exports.postComment = (req, res, next) => {
   const { article_id } = req.params;
   const newComment = req.body;
