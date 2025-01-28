@@ -135,7 +135,7 @@ describe("GET /api/articles", () => {
       });
   });
 
-  describe("Queries: sort_by and order", () => {
+  describe("Queries: sort_by, order, topic", () => {
     test("200: should be able to sort by any valid column e.g. title", () => {
       return request(app)
         .get("/api/articles?sort_by=title")
@@ -187,6 +187,38 @@ describe("GET /api/articles", () => {
         .expect(200)
         .then(({ body: { articles } }) => {
           expect(articles).toBeSorted({ key: "votes", ascending: true });
+        });
+    });
+
+    test("200: should be able to filter the articles by the topic value given", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(12);
+
+          articles.forEach((article) => {
+            expect(article.topic).toBe("mitch");
+          });
+        });
+    });
+
+    test("200: should return an empty array when given a topic that is valid but does not match any articles", () => {
+      return request(app)
+        .get("/api/articles?topic=paper")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(0);
+          expect(Array.isArray(articles)).toBe(true);
+        });
+    });
+
+    test("should return 404 when given a topic that does not exist in the database", () => {
+      return request(app)
+        .get("/api/articles?topic=whoops")
+        .expect(404)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Topic not found");
         });
     });
   });
