@@ -4,6 +4,7 @@ const { getTopics } = require("./controllers/topics.controller");
 const {
   getArticleById,
   getArticles,
+  patchArticle,
 } = require("./controllers/articles.controller");
 const {
   getCommentsByArticleId,
@@ -26,33 +27,26 @@ app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
 app.post("/api/articles/:article_id/comments", postComment);
 
+app.patch("/api/articles/:article_id", patchArticle);
+
 // Catch-all for undefined routes
 app.all("*", (req, res) => {
   res.status(404).send({ msg: "Route not found" });
 });
 
-// Custom error handler for 400s
+// Custom error handler
 app.use((err, req, res, next) => {
-  console.log(err);
-
-  if (
-    err.code === "22P02" ||
-    err.code === "23502" ||
-    err.msg === "Incorrect data type"
-  ) {
-    res.status(400).send({ error: "Bad request" });
+  if (err.status && err.msg) {
+    res.status(err.status).send({ error: err.msg });
   } else {
     next(err);
   }
 });
 
-// Custom error handler for 404s
+// Custom error handler for 400s
 app.use((err, req, res, next) => {
-  if (
-    err.msg === "Article not found" ||
-    err.msg === "Comments not found for this article"
-  ) {
-    res.status(404).send({ error: "Not found" });
+  if (err.code === "22P02" || err.code === "23502") {
+    res.status(400).send({ error: "Bad request" });
   } else {
     next(err);
   }
@@ -60,9 +54,8 @@ app.use((err, req, res, next) => {
 
 // Generic error handler
 app.use((err, req, res, next) => {
-  const status = err.status || 500;
-  const msg = err.msg || "Internal server error";
-  res.status(status).send({ msg });
+  console.log(err, "<<< Need to handle this");
+  res.status(500).send({ error: "Internal Server Error" });
 });
 
 module.exports = app;
