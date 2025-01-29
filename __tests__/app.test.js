@@ -412,6 +412,96 @@ describe("PATCH /api/articles/:article_id", () => {
   });
 });
 
+describe("POST /api/articles", () => {
+  test("201: should respond with the posted article", () => {
+    return request(app)
+      .post("/api/articles")
+      .send({
+        author: "butter_bridge",
+        title: "New article",
+        body: "This is a new article",
+        topic: "mitch",
+        article_img_url:
+          "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+      })
+      .expect(201)
+      .then(({ body: { article } }) => {
+        expect(article.author).toBe("butter_bridge");
+        expect(article.title).toBe("New article");
+        expect(article.body).toBe("This is a new article");
+        expect(article.topic).toBe("mitch");
+        expect(article.article_img_url).toBe(
+          "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
+        );
+        expect(article.article_id).toBe(14);
+        expect(article.votes).toBe(0);
+        expect(article.comment_count).toBe(0);
+        expect(typeof article.created_at).toBe("string");
+      });
+  });
+
+  test("200: should respond with the image url set to the default when none is given", () => {
+    return request(app)
+      .post("/api/articles")
+      .send({
+        author: "butter_bridge",
+        title: "New article",
+        body: "This is a new article",
+        topic: "mitch",
+      })
+      .expect(201)
+      .then(({ body: { article } }) => {
+        expect(article.article_img_url).toBe(
+          "https://images.pexels.com/photos/97050/pexels-photo-97050.jpeg?w=700&h=700"
+        );
+      });
+  });
+
+  test("should return 400 when given missing keys/malformed input", () => {
+    return request(app)
+      .post("/api/articles")
+      .send({ author: "butter_bridge" })
+      .expect(400)
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
+      });
+  });
+
+  test("should return 400 when input has an incorrect data type", () => {
+    return request(app)
+      .post("/api/articles")
+      .send({
+        author: "butter_bridge",
+        title: ["New article"],
+        body: "This is a new article",
+        topic: "mitch",
+        article_img_url:
+          "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+      })
+      .expect(400)
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
+      });
+  });
+
+  test("should return 400 when input violates a foreign key constraint", () => {
+    return request(app)
+      .post("/api/articles")
+      .send({
+        author: "invalid_author",
+        title: "New article",
+        body: "This is a new article",
+        topic: "mitch",
+        article_img_url:
+          "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+      })
+      .expect(400)
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
+      });
+  });
+});
+
 describe("PATCH /api/comments/:comment_id", () => {
   test("200: should return the updated comment with votes value amended", () => {
     return request(app)
