@@ -1,24 +1,14 @@
 const {
-  selectCommentsByArticleId,
-  insertComment,
   removeCommentById,
+  updateCommentById,
 } = require("../models/comments.model");
 
-exports.getCommentsByArticleId = (req, res, next) => {
-  const { article_id } = req.params;
-  selectCommentsByArticleId(article_id)
-    .then((comments) => {
-      res.status(200).send({ comments });
-    })
-    .catch(next);
-};
-
-exports.postComment = (req, res, next) => {
-  const { article_id } = req.params;
-  const newComment = req.body;
-  insertComment(article_id, newComment)
-    .then((postedComment) => {
-      res.status(201).send({ comment: postedComment });
+exports.patchCommentById = (req, res, next) => {
+  const { comment_id } = req.params;
+  const newVotes = req.body;
+  updateCommentById(comment_id, newVotes)
+    .then((comment) => {
+      res.status(200).send({ comment });
     })
     .catch(next);
 };

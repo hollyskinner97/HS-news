@@ -2,11 +2,9 @@ const {
   getArticles,
   getArticleById,
   patchArticle,
-} = require("../controllers/articles.controller");
-const {
   getCommentsByArticleId,
   postComment,
-} = require("../controllers/comments.controller");
+} = require("../controllers/articles.controller");
 
 const articlesRouter = require("express").Router();
 

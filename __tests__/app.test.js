@@ -412,6 +412,75 @@ describe("PATCH /api/articles/:article_id", () => {
   });
 });
 
+describe("PATCH /api/comments/:comment_id", () => {
+  test("200: should return the updated comment with votes value amended", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ inc_votes: 1 })
+      .expect(200)
+      .then(({ body: { comment } }) => {
+        expect(comment).toEqual({
+          body: "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+          votes: 17,
+          author: "butter_bridge",
+          article_id: 9,
+          created_at: "2020-04-06T12:17:00.000Z",
+          comment_id: 1,
+        });
+      });
+  });
+
+  test("200: should update the votes correctly when given a negative increment value", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ inc_votes: -1 })
+      .expect(200)
+      .then(({ body: { comment } }) => {
+        expect(comment.votes).toBe(15);
+      });
+  });
+
+  test("should return 400 when passed a req body with missing fields", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({})
+      .expect(400)
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
+      });
+  });
+
+  test("should return 400 when passed a req body with invalid fields", () => {
+    return request(app)
+      .patch("/api/comments/1")
+      .send({ inc_votes: "four" })
+      .expect(400)
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
+      });
+  });
+
+  test("should return 404 when given an comment id which is out of range / invalid", () => {
+    return request(app)
+      .patch("/api/comments/999")
+      .send({ inc_votes: 4 })
+      .expect(404)
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Comment not found");
+      });
+  });
+
+  test("should return 400 when given an comment id which is not a number", () => {
+    return request(app)
+      .patch("/api/comments/whoops")
+      .send({ inc_votes: 4 })
+      .expect(400)
+      .then(({ body: { error } }) => {
+        expect(error).toBe("Bad request");
+      });
+  });
+});
+
 describe("DELETE /api/comments/:comment_id", () => {
   test("204: Should respond with a 204 and no content", () => {
     return request(app)

@@ -89,6 +89,20 @@
       }
     }
   },
+  "PATCH /api/comments/:comment_id": {
+    "description": "serves the updated comment object based on the given comment id and vote increment value",
+    "queries": [],
+    "exampleResponse": {
+      "comment": {
+        "body": "Oh, I've got compassion running out of my nose, pal! I'm the Sultan of Sentiment!",
+        "votes": 17,
+        "author": "butter_bridge",
+        "article_id": 9,
+        "created_at": "2020-04-06T12:17:00.000Z",
+        "comment_id": 1
+      }
+    }
+  },
   "DELETE /api/comments/:comment_id": {
     "description": "serves a 204 with no content when given a comment id of the comment to be deleted",
     "queries": [],
