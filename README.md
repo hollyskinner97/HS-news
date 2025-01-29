@@ -1,11 +1,13 @@
 # Northcoders News API
 
-Create 2 .env files in the repo root for each of your databases:
+Create 3 .env files in the repo root for each of your databases:
 
 1. File name: .env.development
    File contents: PGDATABASE=nc_news
 2. File name: .env.test
    File contents: PGDATABASE=nc_news_test
+3. File name: .env.production
+   File contents: DATABASE_URL=[Your url link here]
 
 These files will only exist locally, as they are listed in the git.ignore file.
 
