@@ -4,6 +4,7 @@ const {
   updateArticle,
   selectCommentsByArticleId,
   insertComment,
+  insertArticle,
 } = require("../models/articles.model");
 
 exports.getArticleById = (req, res, next) => {
@@ -49,6 +50,15 @@ exports.postComment = (req, res, next) => {
   insertComment(article_id, newComment)
     .then((postedComment) => {
       res.status(201).send({ comment: postedComment });
+    })
+    .catch(next);
+};
+
+exports.postArticle = (req, res, next) => {
+  const newArticle = req.body;
+  insertArticle(newArticle)
+    .then((postedArticle) => {
+      res.status(201).send({ article: postedArticle });
     })
     .catch(next);
 };

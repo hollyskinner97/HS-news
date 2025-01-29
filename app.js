@@ -22,7 +22,7 @@ app.use((err, req, res, next) => {
 
 // Error handler for 400s
 app.use((err, req, res, next) => {
-  if (err.code === "22P02" || err.code === "23502") {
+  if (err.code === "22P02" || err.code === "23502" || err.code === "23503") {
     res.status(400).send({ error: "Bad request" });
   } else {
     next(err);

@@ -89,6 +89,23 @@
       }
     }
   },
+  "POST /api/articles": {
+    "description": "serves the posted article object",
+    "queries": [],
+    "exampleResponse": {
+      "article": {
+        "author": "butter_bridge",
+        "title": "New article",
+        "article_id": 14,
+        "body": "This is a new article",
+        "topic": "mitch",
+        "created_at": 1594329060000,
+        "votes": 0,
+        "comment_count": 0,
+        "article_img_url": "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
+      }
+    }
+  },
   "PATCH /api/comments/:comment_id": {
     "description": "serves the updated comment object based on the given comment id and vote increment value",
     "queries": [],
