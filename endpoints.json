@@ -2,13 +2,6 @@
   "GET /api": {
     "description": "serves up a json representation of all the available endpoints of the api"
   },
-  "GET /api/topics": {
-    "description": "serves an array of all topics",
-    "queries": [],
-    "exampleResponse": {
-      "topics": [{ "slug": "football", "description": "Footie!" }]
-    }
-  },
   "GET /api/articles": {
     "description": "serves an array of all articles and a total count property",
     "queries": ["sort_by", "order", "topic", "limit", "p"],
@@ -125,6 +118,20 @@
     "description": "serves a 204 with no content when given a comment id of the comment to be deleted",
     "queries": [],
     "exampleResponse": {}
+  },
+  "GET /api/topics": {
+    "description": "serves an array of all topics",
+    "queries": [],
+    "exampleResponse": {
+      "topics": [{ "slug": "football", "description": "Footie!" }]
+    }
+  },
+  "POST /api/topics": {
+    "description": "serves the posted topic object",
+    "queries": [],
+    "exampleResponse": {
+      "topic": { "slug": "football", "description": "Footie!" }
+    }
   },
   "GET /api/users": {
     "description": "serves an array of all users",
