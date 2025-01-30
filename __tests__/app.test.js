@@ -341,7 +341,7 @@ describe("GET /api/articles/:article_id/comments", () => {
       .get("/api/articles/1/comments")
       .expect(200)
       .then(({ body: { comments } }) => {
-        expect(comments.length).toBe(11);
+        expect(comments.length).toBe(10); // 10 due to pagination
 
         comments.forEach((comment) => {
           expect(comment).toMatchObject({
@@ -391,6 +391,100 @@ describe("GET /api/articles/:article_id/comments", () => {
       .then(({ body: { error } }) => {
         expect(error).toBe("Bad request");
       });
+  });
+
+  describe("Pagination queries: limit and page", () => {
+    let allComments; // Store all articles for reference
+
+    beforeEach(() => {
+      return request(app)
+        .get("/api/articles/1/comments?limit=100") // All comments
+        .expect(200)
+        .then(({ body: { comments } }) => {
+          allComments = comments;
+        });
+    });
+
+    test("200: should return the comments paginated according to the limit and page queries", () => {
+      const expectedComments = allComments.slice(5, 10);
+      return request(app)
+        .get("/api/articles/1/comments?limit=5&p=2")
+        .expect(200)
+        .then(({ body: { comments } }) => {
+          expect(comments.length).toBe(5);
+          expect(comments).toEqual(expectedComments);
+        });
+    });
+
+    test("200: should return the comments paginated according to the default limit of 10 when not given a limit", () => {
+      const expectedComments = allComments.slice(0, 10);
+      return request(app)
+        .get("/api/articles/1/comments?p=1")
+        .expect(200)
+        .then(({ body: { comments } }) => {
+          // Should return comments 1-10
+          expect(comments.length).toBe(10);
+          expect(comments).toEqual(expectedComments);
+        });
+    });
+
+    test("200: should return the first page of comments as default when not given a p value", () => {
+      const expectedComments = allComments.slice(0, 5);
+      return request(app)
+        .get("/api/articles/1/comments?limit=5")
+        .expect(200)
+        .then(({ body: { comments } }) => {
+          // Should return comments 1-5
+          expect(comments.length).toBe(5);
+          expect(comments).toEqual(expectedComments);
+        });
+    });
+
+    test("200: should return an empty array when given a p value out of range of the total comments", () => {
+      return request(app)
+        .get("/api/articles/1/comments?p=5")
+        .expect(200)
+        .then(({ body: { comments } }) => {
+          expect(comments.length).toBe(0);
+          expect(Array.isArray(comments)).toBe(true);
+        });
+    });
+
+    test("400: should return error message when given a p value less than 1", () => {
+      return request(app)
+        .get("/api/articles/1/comments?p=0")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Limit and page number must be greater than 0");
+        });
+    });
+
+    test("400: should return error message when given a limit less than 1", () => {
+      return request(app)
+        .get("/api/articles/1/comments?limit=0")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Limit and page number must be greater than 0");
+        });
+    });
+
+    test("400: should return bad request when given a p value that is not a number", () => {
+      return request(app)
+        .get("/api/articles/1/comments?p=four")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Bad request");
+        });
+    });
+
+    test("400: should return bad request when given a limit that is not a number", () => {
+      return request(app)
+        .get("/api/articles/1/comments?limit=four")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Bad request");
+        });
+    });
   });
 });
 
