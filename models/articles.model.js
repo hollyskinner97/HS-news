@@ -93,12 +93,25 @@ exports.updateArticle = (article_id, newVotes) => {
     });
 };
 
-exports.selectCommentsByArticleId = (article_id) => {
-  return checkArticleExists(article_id).then(() => {
-    const SQLString =
-      "SELECT * FROM comments WHERE article_id=$1 ORDER BY created_at DESC";
+exports.selectCommentsByArticleId = (article_id, limit = 10, p = 1) => {
+  const offset = (p - 1) * limit;
 
-    return db.query(SQLString, [article_id]).then(({ rows }) => {
+  if (limit < 1 || p < 1) {
+    throw {
+      status: 400,
+      msg: "Limit and page number must be greater than 0",
+    };
+  }
+  return checkArticleExists(article_id).then(() => {
+    const SQLString = `
+      SELECT * FROM comments 
+      WHERE article_id=$1 
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3`;
+
+    const queryValues = [article_id, Number(limit), Number(offset)];
+
+    return db.query(SQLString, queryValues).then(({ rows }) => {
       return rows;
     });
   });
