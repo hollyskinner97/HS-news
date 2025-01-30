@@ -83,6 +83,11 @@
       }
     }
   },
+  "DELETE /api/articles/:article_id": {
+    "description": "serves a 204 with no content when given an article id of the article to be deleted, and deletes the respective comments",
+    "queries": [],
+    "exampleResponse": {}
+  },
   "POST /api/articles": {
     "description": "serves the posted article object",
     "queries": [],

@@ -599,6 +599,49 @@ describe("ARTICLES ENDPOINT", () => {
     });
   });
 
+  describe("DELETE /api/articles/:article_id", () => {
+    test("204: Should respond with a 204 and no content", () => {
+      return request(app)
+        .delete("/api/articles/9")
+        .expect(204)
+        .then(({ body }) => {
+          expect(body).toEqual({});
+        });
+    });
+
+    test("204: Should delete the respective comments", () => {
+      return request(app)
+        .delete("/api/articles/9")
+        .expect(204)
+        .then(() => {
+          return request(app)
+            .get("/api/articles/9/comments")
+            .expect(404)
+            .then(({ body: { error } }) => {
+              expect(error).toBe("Article not found");
+            });
+        });
+    });
+
+    test("404: should return error message if the article id is out of range", () => {
+      return request(app)
+        .delete("/api/articles/1000")
+        .expect(404)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Article not found");
+        });
+    });
+
+    test("400: should return bad request if the article id is invalid / not a number", () => {
+      return request(app)
+        .delete("/api/articles/whoops")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Bad request");
+        });
+    });
+  });
+
   describe("POST /api/articles", () => {
     test("201: should respond with the posted article", () => {
       return request(app)
