@@ -10,8 +10,8 @@
     }
   },
   "GET /api/articles": {
-    "description": "serves an array of all articles",
-    "queries": ["author", "topic", "sort_by", "order"],
+    "description": "serves an array of all articles and a total count property",
+    "queries": ["sort_by", "order", "topic", "limit", "p"],
     "exampleResponse": {
       "articles": [
         {
@@ -23,7 +23,8 @@
           "votes": 0,
           "comment_count": 6
         }
-      ]
+      ],
+      "total_count": 13
     }
   },
   "GET /api/articles/:article_id": {
