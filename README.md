@@ -31,12 +31,12 @@ The application is built with Node.js, Express, and PostgreSQL, and follows best
    **npm install**
 3. Create 3 .env files in the root directory for each database:
    - Name: **.env.development**
-     Contents: PGDATABASE=nc_news
+     Contents: PGDATABASE=[Dev database here]
    - Name: **.env.test**
-     Contents: PGDATABASE=nc_news_test
+     Contents: PGDATABASE=[Test database here]
    - Name: **.env.production**
-     Contents: DATABASE_URL=[Your url link here]
-     _Note: These files will only exist locally, as they are listed in the git.ignore file. As per the connection.js file, the database will default to 'development' unless told otherwise._
+     Contents: DATABASE*URL=[Your url link here]
+     \_Note: These files will only exist locally, as they are listed in the git.ignore file. As per the connection.js file, the database will default to 'development' unless told otherwise.*
 4. Seed the local database: **npm run seed**
    Or use **npm run seed-prod** for production
 5. Ensure the application is working by running the tests:

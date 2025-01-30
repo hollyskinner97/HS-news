@@ -101,7 +101,7 @@ describe("GET /api/articles", () => {
       .get("/api/articles")
       .expect(200)
       .then(({ body: { articles } }) => {
-        expect(articles.length).toBe(13);
+        expect(articles.length).toBe(10); // 10 due to pagination
 
         articles.forEach((article) => {
           expect(article).toMatchObject({
@@ -196,8 +196,6 @@ describe("GET /api/articles", () => {
         .get("/api/articles?topic=mitch")
         .expect(200)
         .then(({ body: { articles } }) => {
-          expect(articles.length).toBe(12);
-
           articles.forEach((article) => {
             expect(article.topic).toBe("mitch");
           });
@@ -220,6 +218,118 @@ describe("GET /api/articles", () => {
         .expect(404)
         .then(({ body: { error } }) => {
           expect(error).toBe("Topic not found");
+        });
+    });
+  });
+
+  describe("Pagination queries: limit and page", () => {
+    let allArticles; // Store all articles for reference
+
+    beforeEach(() => {
+      return request(app)
+        .get("/api/articles?limit=100") // All articles
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          allArticles = articles;
+        });
+    });
+
+    test("200: should return the articles paginated according to the limit and page queries", () => {
+      const expectedArticles = allArticles.slice(5, 10);
+      return request(app)
+        .get("/api/articles?limit=5&p=2")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(5);
+          expect(articles).toEqual(expectedArticles);
+        });
+    });
+
+    test("200: should return the articles paginated according to the default limit of 10 when not given a limit", () => {
+      const expectedArticles = allArticles.slice(0, 10);
+      return request(app)
+        .get("/api/articles?p=1")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          // Should return articles 1-10
+          expect(articles.length).toBe(10);
+          expect(articles).toEqual(expectedArticles);
+        });
+    });
+
+    test("200: should return the first page of articles as default when not given a p value", () => {
+      const expectedArticles = allArticles.slice(0, 5);
+      return request(app)
+        .get("/api/articles?limit=5")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          // Should return articles 1-5
+          expect(articles.length).toBe(5);
+          expect(articles).toEqual(expectedArticles);
+        });
+    });
+
+    test("200: should return an empty array when given a p value out of range of the total articles", () => {
+      return request(app)
+        .get("/api/articles?p=5")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(0);
+          expect(Array.isArray(articles)).toBe(true);
+        });
+    });
+
+    test("200: should also return a property of total_count which defaults to the number of articles if no filter is applied", () => {
+      return request(app)
+        .get("/api/articles?p=1&limit=5")
+        .expect(200)
+        .then(({ body: { total_count } }) => {
+          expect(total_count).toBe(13);
+        });
+    });
+
+    test("200: should return the correct total_count when a filter is applied", () => {
+      return request(app)
+        .get("/api/articles?p=1&limit=5&topic=mitch")
+        .expect(200)
+        .then(({ body: { total_count } }) => {
+          expect(total_count).toBe(12);
+        });
+    });
+
+    test("400: should return error message when given a p value less than 1", () => {
+      return request(app)
+        .get("/api/articles?p=0")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Limit and page number must be greater than 0");
+        });
+    });
+
+    test("400: should return error message when given a limit less than 1", () => {
+      return request(app)
+        .get("/api/articles?limit=0")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Limit and page number must be greater than 0");
+        });
+    });
+
+    test("400: should return bad request when given a p value that is not a number", () => {
+      return request(app)
+        .get("/api/articles?p=four")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Bad request");
+        });
+    });
+
+    test("400: should return bad request when given a limit that is not a number", () => {
+      return request(app)
+        .get("/api/articles?limit=four")
+        .expect(400)
+        .then(({ body: { error } }) => {
+          expect(error).toBe("Bad request");
         });
     });
   });
