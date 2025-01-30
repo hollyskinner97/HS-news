@@ -5,7 +5,6 @@ const seed = require("../db/seeds/seed");
 const db = require("../db/connection");
 const testData = require("../db/data/test-data/index");
 const { toBeSorted, toBeSortedBy } = require("jest-sorted");
-const articles = require("../db/data/test-data/articles");
 
 beforeEach(() => {
   return seed(testData);
@@ -16,7 +15,7 @@ afterAll(() => {
 });
 
 describe("Invalid endpoint error", () => {
-  test("Responds with 404 when trying to access an invalid endpoint", () => {
+  test("404: should respond with error message when trying to access an invalid endpoint", () => {
     return request(app)
       .get("/api/topix")
       .expect(404)
@@ -27,7 +26,7 @@ describe("Invalid endpoint error", () => {
 });
 
 describe("GET /api", () => {
-  test("200: Responds with an object detailing the documentation for each endpoint", () => {
+  test("200: should respond with an object detailing the documentation for each endpoint", () => {
     return request(app)
       .get("/api")
       .expect(200)
@@ -89,7 +88,7 @@ describe("ARTICLES ENDPOINT", () => {
           });
       });
 
-      test("should return 400 when given a column that is not allowed", () => {
+      test("400: should return error message when given a column that is not allowed", () => {
         return request(app)
           .get("/api/articles?sort_by=body")
           .expect(400)
@@ -98,7 +97,7 @@ describe("ARTICLES ENDPOINT", () => {
           });
       });
 
-      test("should return 400 when given a column that does not exist", () => {
+      test("400: should return error message when given a column that does not exist", () => {
         return request(app)
           .get("/api/articles?sort_by=whoops")
           .expect(400)
@@ -116,7 +115,7 @@ describe("ARTICLES ENDPOINT", () => {
           });
       });
 
-      test("should return 400 when given an order that is invalid", () => {
+      test("400: should return error message when given an order that is invalid", () => {
         return request(app)
           .get("/api/articles?order=whoops")
           .expect(400)
@@ -155,7 +154,7 @@ describe("ARTICLES ENDPOINT", () => {
           });
       });
 
-      test("should return 404 when given a topic that does not exist in the database", () => {
+      test("404: should return error message when given a topic that does not exist in the database", () => {
         return request(app)
           .get("/api/articles?topic=whoops")
           .expect(404)
@@ -299,7 +298,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 404 when given an article id which is out of range / invalid", () => {
+    test("404: should return error message when given an article id which is out of range / invalid", () => {
       return request(app)
         .get("/api/articles/999")
         .expect(404)
@@ -308,7 +307,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when given an article id which is not a number", () => {
+    test("400: should return bad request when given an article id which is not a number", () => {
       return request(app)
         .get("/api/articles/whoops")
         .expect(400)
@@ -358,7 +357,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 404 when given an article id which is out of range / invalid", () => {
+    test("404: should return error message when given an article id which is out of range / invalid", () => {
       return request(app)
         .get("/api/articles/999/comments")
         .expect(404)
@@ -367,7 +366,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when given an article id which is not a number", () => {
+    test("400: should return bad request when given an article id which is not a number", () => {
       return request(app)
         .get("/api/articles/whoops/comments")
         .expect(400)
@@ -486,7 +485,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when given missing keys/malformed input", () => {
+    test("400: should return bad request when given missing keys/malformed input", () => {
       return request(app)
         .post("/api/articles/1/comments")
         .send({ username: "butter_bridge" })
@@ -496,7 +495,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when input has an incorrect data type", () => {
+    test("400: should return bad request when input has an incorrect data type", () => {
       return request(app)
         .post("/api/articles/1/comments")
         .send({ username: 5, body: "wow so cool" })
@@ -506,7 +505,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 404 when given an article id which is out of range / invalid", () => {
+    test("404: should return error message when given an article id which is out of range / invalid", () => {
       return request(app)
         .post("/api/articles/999/comments")
         .send({ username: "butter_bridge", body: "wow so cool" })
@@ -516,7 +515,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when given an article id which is not a number", () => {
+    test("400: should return bad request when given an article id which is not a number", () => {
       return request(app)
         .post("/api/articles/whoops/comments")
         .send({ username: "butter_bridge", body: "wow so cool" })
@@ -558,7 +557,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when passed a req body with missing fields", () => {
+    test("400: should return bad request when passed a req body with missing fields", () => {
       return request(app)
         .patch("/api/articles/1")
         .send({})
@@ -568,7 +567,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when passed a req body with invalid fields", () => {
+    test("400: should return bad request when passed a req body with invalid fields", () => {
       return request(app)
         .patch("/api/articles/1")
         .send({ inc_votes: "four" })
@@ -578,7 +577,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 404 when given an article id which is out of range / invalid", () => {
+    test("404: should return error message when given an article id which is out of range / invalid", () => {
       return request(app)
         .patch("/api/articles/999")
         .send({ inc_votes: 4 })
@@ -588,7 +587,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when given an article id which is not a number", () => {
+    test("400: should return bad request when given an article id which is not a number", () => {
       return request(app)
         .patch("/api/articles/whoops")
         .send({ inc_votes: 4 })
@@ -687,7 +686,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when given missing keys/malformed input", () => {
+    test("400: should return bad request when given missing keys/malformed input", () => {
       return request(app)
         .post("/api/articles")
         .send({ author: "butter_bridge" })
@@ -697,7 +696,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when input has an incorrect data type", () => {
+    test("400: should return bad request when input has an incorrect data type", () => {
       return request(app)
         .post("/api/articles")
         .send({
@@ -714,7 +713,7 @@ describe("ARTICLES ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when input violates a foreign key constraint", () => {
+    test("400: should return bad request when input violates a foreign key constraint", () => {
       return request(app)
         .post("/api/articles")
         .send({
@@ -762,7 +761,7 @@ describe("COMMENTS ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when passed a req body with missing fields", () => {
+    test("400: should return bad request when passed a req body with missing fields", () => {
       return request(app)
         .patch("/api/comments/1")
         .send({})
@@ -772,7 +771,7 @@ describe("COMMENTS ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when passed a req body with invalid fields", () => {
+    test("400: should return bad request when passed a req body with invalid fields", () => {
       return request(app)
         .patch("/api/comments/1")
         .send({ inc_votes: "four" })
@@ -782,7 +781,7 @@ describe("COMMENTS ENDPOINT", () => {
         });
     });
 
-    test("should return 404 when given an comment id which is out of range / invalid", () => {
+    test("404: should return error message when given an comment id which is out of range / invalid", () => {
       return request(app)
         .patch("/api/comments/999")
         .send({ inc_votes: 4 })
@@ -792,7 +791,7 @@ describe("COMMENTS ENDPOINT", () => {
         });
     });
 
-    test("should return 400 when given an comment id which is not a number", () => {
+    test("400: should return bad request when given an comment id which is not a number", () => {
       return request(app)
         .patch("/api/comments/whoops")
         .send({ inc_votes: 4 })
@@ -813,7 +812,7 @@ describe("COMMENTS ENDPOINT", () => {
         });
     });
 
-    test("should return 404 if the comment id is out of range", () => {
+    test("404: should return error message if the comment id is out of range", () => {
       return request(app)
         .delete("/api/comments/1000")
         .expect(404)
@@ -822,7 +821,7 @@ describe("COMMENTS ENDPOINT", () => {
         });
     });
 
-    test("should return 400 if the comment id is invalid / not a number", () => {
+    test("400: should return bad request if the comment id is invalid / not a number", () => {
       return request(app)
         .delete("/api/comments/whoops")
         .expect(400)
@@ -926,7 +925,7 @@ describe("USERS ENDPOINT", () => {
         });
     });
 
-    test("should return 404 when given a username that does not exist", () => {
+    test("404: should return error message when given a username that does not exist", () => {
       return request(app)
         .get("/api/users/holly")
         .expect(404)
